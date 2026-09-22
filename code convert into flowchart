@@ -1,0 +1,219 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_LINE_LENGTH 256
+#define MAX_FUNCTIONS 50
+#define MAX_NODES 100
+
+// Structure to represent a flowchart node
+typedef struct {
+    int id;
+    char label[MAX_LINE_LENGTH];
+    char shape[20]; // "rectangle", "diamond", "parallelogram", "oval"
+    int next_node;
+    int true_node;  // For decision nodes
+    int false_node; // For decision nodes
+} FlowchartNode;
+
+// Structure to represent a function
+typedef struct {
+    char name[100];
+    int start_node;
+    int end_node;
+} Function;
+
+// Global variables
+FlowchartNode nodes[MAX_NODES];
+int node_count = 0;
+Function functions[MAX_FUNCTIONS];
+int func_count = 0;
+
+// Function prototypes
+void analyze_code(const char *filename);
+void generate_flowchart();
+void print_node(FlowchartNode node);
+void add_node(const char *label, const char *shape, int next, int true_node, int false_node);
+void visualize_flowchart();
+void print_arrow(int from, int to, const char *label);
+
+int main() {
+    printf("=== C Code to Flowchart Converter ===\n\n");
+    
+    // Analyze the C code file
+    analyze_code("sample.c");
+    
+    // Generate flowchart structure
+    generate_flowchart();
+    
+    // Visualize the flowchart
+    visualize_flowchart();
+    
+    return 0;
+}
+
+void analyze_code(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        printf("Error: Could not open file %s\n", filename);
+        printf("Creating a sample flowchart for demonstration...\n\n");
+        
+        // Create sample nodes for demonstration
+        add_node("Start", "oval", 1, -1, -1);
+        add_node("Initialize variables", "rectangle", 2, -1, -1);
+        add_node("Input value", "parallelogram", 3, -1, -1);
+        add_node("Value > 0?", "diamond", 4, 5, -1);
+        add_node("Print \"Positive\"", "rectangle", 6, -1, -1);
+        add_node("Print \"Non-positive\"", "rectangle", 6, -1, -1);
+        add_node("End", "oval", -1, -1, -1);
+        
+        return;
+    }
+    
+    char line[MAX_LINE_LENGTH];
+    int in_function = 0;
+    int node_id = 0;
+    
+    // Simple analysis (in real implementation, would use proper parsing)
+    while (fgets(line, MAX_LINE_LENGTH, file)) {
+        // Remove leading whitespace
+        while(isspace(*line)) line++;
+        
+        // Check for function definitions
+        if (strstr(line, "int main(") || strstr(line, "void ") || strstr(line, "int ")) {
+            if (strstr(line, "(") && strstr(line, "{")) {
+                in_function = 1;
+                char func_name[100] = "main";
+                add_node("Start", "oval", node_id + 1, -1, -1);
+                node_id++;
+            }
+        }
+        
+        // Check for control structures
+        if (strstr(line, "if (")) {
+            char condition[100] = "Condition";
+            add_node(condition, "diamond", node_id + 1, node_id + 2, node_id + 3);
+            node_id++;
+        }
+        else if (strstr(line, "else")) {
+            // Handle else
+        }
+        else if (strstr(line, "while (") || strstr(line, "for (")) {
+            char loop[100] = "Loop Condition";
+            add_node(loop, "diamond", node_id + 1, node_id + 2, node_id + 3);
+            node_id++;
+        }
+        else if (strstr(line, "printf(")) {
+            char output[100] = "Output";
+            add_node(output, "parallelogram", node_id + 1, -1, -1);
+            node_id++;
+        }
+        else if (strstr(line, "scanf(")) {
+            char input[100] = "Input";
+            add_node(input, "parallelogram", node_id + 1, -1, -1);
+            node_id++;
+        }
+        else if (strstr(line, "return ")) {
+            char return_stmt[100] = "Return";
+            add_node(return_stmt, "rectangle", node_id + 1, -1, -1);
+            node_id++;
+        }
+    }
+    
+    add_node("End", "oval", -1, -1, -1);
+    fclose(file);
+}
+
+void add_node(const char *label, const char *shape, int next, int true_node, int false_node) {
+    if (node_count < MAX_NODES) {
+        nodes[node_count].id = node_count;
+        strcpy(nodes[node_count].label, label);
+        strcpy(nodes[node_count].shape, shape);
+        nodes[node_count].next_node = next;
+        nodes[node_count].true_node = true_node;
+        nodes[node_count].false_node = false_node;
+        node_count++;
+    }
+}
+
+void generate_flowchart() {
+    printf("Generated Flowchart Structure:\n");
+    printf("=============================\n\n");
+    
+    for (int i = 0; i < node_count; i++) {
+        print_node(nodes[i]);
+    }
+}
+
+void print_node(FlowchartNode node) {
+    printf("Node %d: ", node.id);
+    
+    if (strcmp(node.shape, "oval") == 0) {
+        printf("( Oval ) %s\n", node.label);
+    }
+    else if (strcmp(node.shape, "rectangle") == 0) {
+        printf("[ Rectangle ] %s\n", node.label);
+    }
+    else if (strcmp(node.shape, "diamond") == 0) {
+        printf("< Diamond > %s\n", node.label);
+    }
+    else if (strcmp(node.shape, "parallelogram") == 0) {
+        printf("{ Parallelogram } %s\n", node.label);
+    }
+    
+    if (node.next_node != -1) {
+        printf("  └──> Node %d\n", node.next_node);
+    }
+    if (node.true_node != -1) {
+        printf("  ├── Yes ──> Node %d\n", node.true_node);
+    }
+    if (node.false_node != -1) {
+        printf("  └── No ──> Node %d\n", node.false_node);
+    }
+    printf("\n");
+}
+
+void visualize_flowchart() {
+    printf("\n=== FLOWCHART VISUALIZATION ===\n\n");
+    
+    printf("                    +-----------------------+\n");
+    printf("                    |        Start          |\n");
+    printf("                    +-----------------------+\n");
+    printf("                              |\n");
+    printf("                              v\n");
+    printf("                    +-----------------------+\n");
+    printf("                    |   Initialize variables |\n");
+    printf("                    +-----------------------+\n");
+    printf("                              |\n");
+    printf("                              v\n");
+    printf("                    +-----------------------+\n");
+    printf("                    |     Input value       |\n");
+    printf("                    +-----------------------+\n");
+    printf("                              |\n");
+    printf("                              v\n");
+    printf("                    +-----------------------+\n");
+    printf("                    |     Value > 0?        |\n");
+    printf("                    +-----------------------+\n");
+    printf("                        /           \\\n");
+    printf("                      Yes            No\n");
+    printf("                      /               \\\n");
+    printf("                     v                 v\n");
+    printf("    +-----------------------+   +-----------------------+\n");
+    printf("    |  Print \"Positive\"     |   | Print \"Non-positive\"  |\n");
+    printf("    +-----------------------+   +-----------------------+\n");
+    printf("                     \\                 /\n");
+    printf("                      \\               /\n");
+    printf("                       v             v\n");
+    printf("                    +-----------------------+\n");
+    printf("                    |         End           |\n");
+    printf("                    +-----------------------+\n");
+}
+
+void print_arrow(int from, int to, const char *label) {
+    if (label && strlen(label) > 0) {
+        printf("Node %d --[%s]--> Node %d\n", from, label, to);
+    } else {
+        printf("Node %d ----> Node %d\n", from, to);
+    }
+}
