@@ -1,0 +1,370 @@
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <time.h>
+
+#define BOARD_SIZE 3
+#define MAX_DEPTH 9
+#define AI_PLAYER 'O'
+#define HUMAN_PLAYER 'X'
+#define EMPTY ' '
+
+// Game board representation
+char board[BOARD_SIZE][BOARD_SIZE];
+
+// Performance metrics
+int nodesEvaluated = 0;
+int prunedBranches = 0;
+
+// Function prototypes
+void initializeBoard();
+void displayBoard();
+int isMovesLeft();
+int evaluateBoard();
+int minimax(int depth, int isMax, int alpha, int beta);
+void findBestMove(int *bestRow, int *bestCol);
+int checkWinner();
+void playGame();
+void printAIExplanation();
+
+/*
+ * Initialize the game board with empty spaces
+ */
+void initializeBoard() {
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            board[i][j] = EMPTY;
+        }
+    }
+}
+
+/*
+ * Display the current game board with formatting
+ */
+void displayBoard() {
+    printf("\n");
+    printf("    1   2   3\n");
+    printf("  +---+---+---+\n");
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        printf("%d |", i + 1);
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            printf(" %c |", board[i][j]);
+        }
+        printf("\n");
+        printf("  +---+---+---+\n");
+    }
+    printf("\n");
+}
+
+/*
+ * Check if there are any moves left on the board
+ * Returns 1 if moves available, 0 if board is full
+ */
+int isMovesLeft() {
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            if (board[i][j] == EMPTY) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+/*
+ * Evaluate the current board state
+ * Returns:
+ *   +10 if AI wins
+ *   -10 if Human wins
+ *    0 for draw or non-terminal state
+ */
+int evaluateBoard() {
+    // Check rows for winner
+    for (int row = 0; row < BOARD_SIZE; row++) {
+        if (board[row][0] == board[row][1] && board[row][1] == board[row][2]) {
+            if (board[row][0] == AI_PLAYER) return +10;
+            if (board[row][0] == HUMAN_PLAYER) return -10;
+        }
+    }
+
+    // Check columns for winner
+    for (int col = 0; col < BOARD_SIZE; col++) {
+        if (board[0][col] == board[1][col] && board[1][col] == board[2][col]) {
+            if (board[0][col] == AI_PLAYER) return +10;
+            if (board[0][col] == HUMAN_PLAYER) return -10;
+        }
+    }
+
+    // Check diagonals for winner
+    if (board[0][0] == board[1][1] && board[1][1] == board[2][2]) {
+        if (board[0][0] == AI_PLAYER) return +10;
+        if (board[0][0] == HUMAN_PLAYER) return -10;
+    }
+
+    if (board[0][2] == board[1][1] && board[1][1] == board[2][0]) {
+        if (board[0][2] == AI_PLAYER) return +10;
+        if (board[0][2] == HUMAN_PLAYER) return -10;
+    }
+
+    // No winner yet
+    return 0;
+}
+
+/*
+ * Minimax Algorithm with Alpha-Beta Pruning
+ * 
+ * This is the core AI decision-making function that:
+ * 1. Recursively explores all possible game states
+ * 2. Maximizes AI's score while minimizing Human's score
+ * 3. Uses Alpha-Beta pruning to skip unnecessary calculations
+ * 
+ * Parameters:
+ *   depth: Current depth in the game tree
+ *   isMax: 1 if AI's turn (maximizing), 0 if Human's turn (minimizing)
+ *   alpha: Best value for maximizer (AI)
+ *   beta:  Best value for minimizer (Human)
+ * 
+ * Returns: The best score for the current player
+ */
+int minimax(int depth, int isMax, int alpha, int beta) {
+    nodesEvaluated++;
+    
+    int score = evaluateBoard();
+    
+    // Terminal states
+    if (score == 10) return score - depth;  // Prefer quicker wins
+    if (score == -10) return score + depth; // Delay losses
+    if (!isMovesLeft()) return 0;           // Draw
+    
+    if (isMax) {
+        // AI's turn - maximize score
+        int best = INT_MIN;
+        
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                if (board[i][j] == EMPTY) {
+                    // Make the move
+                    board[i][j] = AI_PLAYER;
+                    
+                    // Recursively evaluate this move
+                    int moveVal = minimax(depth + 1, 0, alpha, beta);
+                    best = (moveVal > best) ? moveVal : best;
+                    
+                    // Undo the move (backtracking)
+                    board[i][j] = EMPTY;
+                    
+                    // Alpha-Beta Pruning
+                    alpha = (best > alpha) ? best : alpha;
+                    if (beta <= alpha) {
+                        prunedBranches++;
+                        return best; // Prune remaining branches
+                    }
+                }
+            }
+        }
+        return best;
+    } else {
+        // Human's turn - minimize score
+        int best = INT_MAX;
+        
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                if (board[i][j] == EMPTY) {
+                    // Make the move
+                    board[i][j] = HUMAN_PLAYER;
+                    
+                    // Recursively evaluate this move
+                    int moveVal = minimax(depth + 1, 1, alpha, beta);
+                    best = (moveVal < best) ? moveVal : best;
+                    
+                    // Undo the move (backtracking)
+                    board[i][j] = EMPTY;
+                    
+                    // Alpha-Beta Pruning
+                    beta = (best < beta) ? best : beta;
+                    if (beta <= alpha) {
+                        prunedBranches++;
+                        return best; // Prune remaining branches
+                    }
+                }
+            }
+        }
+        return best;
+    }
+}
+
+/*
+ * Find the best move for AI using Minimax
+ * Evaluates all possible moves and selects the optimal one
+ */
+void findBestMove(int *bestRow, int *bestCol) {
+    int bestVal = INT_MIN;
+    *bestRow = -1;
+    *bestCol = -1;
+    
+    // Reset performance metrics
+    nodesEvaluated = 0;
+    prunedBranches = 0;
+    
+    // Traverse all cells and evaluate minimax for each empty cell
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            if (board[i][j] == EMPTY) {
+                // Make the move
+                board[i][j] = AI_PLAYER;
+                
+                // Calculate minimax value for this move
+                int moveVal = minimax(0, 0, INT_MIN, INT_MAX);
+                
+                // Undo the move
+                board[i][j] = EMPTY;
+                
+                // Update best move if this one is better
+                if (moveVal > bestVal) {
+                    *bestRow = i;
+                    *bestCol = j;
+                    bestVal = moveVal;
+                }
+            }
+        }
+    }
+}
+
+/*
+ * Check if there's a winner
+ * Returns: 1 if game over, 0 if game continues
+ */
+int checkWinner() {
+    return evaluateBoard() != 0 || !isMovesLeft();
+}
+
+/*
+ * Print AI algorithm explanation
+ */
+void printAIExplanation() {
+    printf("\n=== AI ALGORITHM EXPLANATION ===\n");
+    printf("This AI uses the Minimax algorithm with Alpha-Beta pruning:\n\n");
+    printf("1. MINIMAX ALGORITHM:\n");
+    printf("   - Simulates all possible future game states\n");
+    printf("   - AI (maximizer) tries to maximize its score\n");
+    printf("   - Human (minimizer) tries to minimize AI's score\n");
+    printf("   - Recursively evaluates moves up to 9 levels deep\n\n");
+    printf("2. ALPHA-BETA PRUNING:\n");
+    printf("   - Optimizes Minimax by skipping unnecessary calculations\n");
+    printf("   - Alpha: Best value found for maximizer\n");
+    printf("   - Beta:  Best value found for minimizer\n");
+    printf("   - Prunes branches that cannot affect the final decision\n\n");
+    printf("3. EVALUATION FUNCTION:\n");
+    printf("   - +10 for AI win (minus depth to prefer quicker wins)\n");
+    printf("   - -10 for Human win (plus depth to delay losses)\n");
+    printf("   - 0 for draw or non-terminal states\n\n");
+    printf("================================\n\n");
+}
+
+/*
+ * Main game loop
+ */
+void playGame() {
+    int row, col;
+    int gameOver = 0;
+    int currentPlayer = HUMAN_PLAYER; // Human starts
+    
+    printf("\n=== AI TIC-TAC-TOE ===\n");
+    printf("You are 'X', AI is 'O'\n");
+    printf("Enter row and column (1-3) to make your move\n\n");
+    
+    while (!gameOver) {
+        displayBoard();
+        
+        if (currentPlayer == HUMAN_PLAYER) {
+            // Human's turn
+            printf("Your turn (X). Enter row and column: ");
+            scanf("%d %d", &row, &col);
+            
+            // Convert to 0-based indexing
+            row--; col--;
+            
+            // Validate input
+            if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE) {
+                printf("Invalid input! Please enter values between 1-3.\n");
+                continue;
+            }
+            
+            if (board[row][col] != EMPTY) {
+                printf("Cell already occupied! Try again.\n");
+                continue;
+            }
+            
+            board[row][col] = HUMAN_PLAYER;
+        } else {
+            // AI's turn
+            printf("AI is thinking...\n");
+            
+            clock_t start = clock();
+            findBestMove(&row, &col);
+            clock_t end = clock();
+            
+            double timeTaken = ((double)(end - start)) / CLOCKS_PER_SEC;
+            
+            board[row][col] = AI_PLAYER;
+            
+            printf("AI placed 'O' at row %d, column %d\n", row + 1, col + 1);
+            printf("AI evaluated %d nodes, pruned %d branches\n", nodesEvaluated, prunedBranches);
+            printf("Decision time: %.4f seconds\n", timeTaken);
+        }
+        
+        // Check for winner
+        if (checkWinner()) {
+            displayBoard();
+            int score = evaluateBoard();
+            
+            if (score == 10) {
+                printf("AI WINS! Better luck next time.\n");
+            } else if (score == -10) {
+                printf("CONGRATULATIONS! You beat the AI!\n");
+            } else {
+                printf("It's a DRAW! Well played.\n");
+            }
+            
+            gameOver = 1;
+        } else {
+            // Switch players
+            currentPlayer = (currentPlayer == HUMAN_PLAYER) ? AI_PLAYER : HUMAN_PLAYER;
+        }
+    }
+}
+
+/*
+ * Main function
+ */
+int main() {
+    int choice;
+    
+    do {
+        printf("\n=== AI TIC-TAC-TOE ===\n");
+        printf("1. Play Game\n");
+        printf("2. How AI Works\n");
+        printf("3. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        
+        switch (choice) {
+            case 1:
+                initializeBoard();
+                playGame();
+                break;
+            case 2:
+                printAIExplanation();
+                break;
+            case 3:
+                printf("Thanks for playing!\n");
+                break;
+            default:
+                printf("Invalid choice! Please try again.\n");
+        }
+    } while (choice != 3);
+    
+    return 0;
+}
