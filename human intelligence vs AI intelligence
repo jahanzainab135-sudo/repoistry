@@ -1,0 +1,269 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#define MAX_QUESTIONS 10
+#define MAX_ANSWER_LENGTH 100
+
+// Structure to represent a question
+typedef struct {
+    char question[200];
+    char humanAdvantage[150];
+    char aiAdvantage[150];
+    int category; // 1: Creativity, 2: Logic, 3: Emotion, 4: Learning
+} Question;
+
+// Function prototypes
+void displayWelcome(void);
+void displayMenu(void);
+void runComparisonQuiz(void);
+void displayIntelligenceComparison(void);
+void demonstrateAILearning(void);
+void demonstrateHumanCreativity(void);
+void clearInputBuffer(void);
+
+int main() {
+    int choice;
+    
+    displayWelcome();
+    
+    do {
+        displayMenu();
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        clearInputBuffer();
+        
+        switch(choice) {
+            case 1:
+                runComparisonQuiz();
+                break;
+            case 2:
+                displayIntelligenceComparison();
+                break;
+            case 3:
+                demonstrateAILearning();
+                break;
+            case 4:
+                demonstrateHumanCreativity();
+                break;
+            case 5:
+                printf("\nThank you for exploring the differences between human and AI intelligence!\n");
+                break;
+            default:
+                printf("\nInvalid choice. Please try again.\n");
+        }
+    } while(choice != 5);
+    
+    return 0;
+}
+
+void displayWelcome(void) {
+    printf("\n");
+    printf("========================================\n");
+    printf("  HUMAN INTELLIGENCE vs AI INTELLIGENCE\n");
+    printf("========================================\n");
+    printf("\nThis program demonstrates the key differences\n");
+    printf("between human cognitive abilities and artificial\n");
+    printf("intelligence capabilities.\n\n");
+}
+
+void displayMenu(void) {
+    printf("\n--- Main Menu ---\n");
+    printf("1. Take the Intelligence Comparison Quiz\n");
+    printf("2. View Intelligence Comparison Chart\n");
+    printf("3. Demonstrate AI Learning Capability\n");
+    printf("4. Demonstrate Human Creativity\n");
+    printf("5. Exit\n");
+}
+
+void clearInputBuffer(void) {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+void runComparisonQuiz(void) {
+    Question questions[MAX_QUESTIONS] = {
+        {
+            "Which is better at understanding emotions and empathy?",
+            "Humans naturally understand and respond to emotions",
+            "AI can simulate empathy but doesn't truly feel emotions",
+            3
+        },
+        {
+            "Which excels at creative problem solving?",
+            "Humans can think outside the box and innovate",
+            "AI can generate novel combinations but lacks true creativity",
+            1
+        },
+        {
+            "Which is faster at processing large amounts of data?",
+            "Humans get overwhelmed with too much data",
+            "AI can process millions of records in seconds",
+            2
+        },
+        {
+            "Which can learn from fewer examples?",
+            "Humans can learn new concepts from just a few examples",
+            "AI typically requires thousands of examples to learn",
+            4
+        },
+        {
+            "Which is better at common sense reasoning?",
+            "Humans have innate common sense from life experience",
+            "AI struggles with basic common sense without explicit training",
+            2
+        },
+        {
+            "Which can understand context and nuance better?",
+            "Humans understand subtle social and cultural contexts",
+            "AI can miss subtle cues and context without explicit data",
+            3
+        },
+        {
+            "Which is more energy efficient?",
+            "Human brain uses about 20 watts of power",
+            "AI systems require massive computational power and energy",
+            2
+        },
+        {
+            "Which can generalize knowledge across domains?",
+            "Humans can apply knowledge from one field to another",
+            "AI is typically specialized for specific tasks",
+            4
+        },
+        {
+            "Which has consciousness and self-awareness?",
+            "Humans have subjective experiences and consciousness",
+            "AI has no consciousness or self-awareness",
+            3
+        },
+        {
+            "Which is better at repetitive tasks without fatigue?",
+            "Humans get tired and make errors in repetitive tasks",
+            "AI can perform repetitive tasks endlessly without fatigue",
+            2
+        }
+    };
+    
+    int score = 0;
+    int answer;
+    
+    printf("\n--- Intelligence Comparison Quiz ---\n");
+    printf("Answer the following questions to test your understanding\n");
+    printf("of human vs AI intelligence.\n\n");
+    
+    for(int i = 0; i < MAX_QUESTIONS; i++) {
+        printf("Question %d: %s\n", i+1, questions[i].question);
+        printf("1. Human Intelligence\n");
+        printf("2. AI Intelligence\n");
+        printf("Your answer (1 or 2): ");
+        scanf("%d", &answer);
+        clearInputBuffer();
+        
+        // Determine correct answer based on category
+        int correctAnswer;
+        switch(questions[i].category) {
+            case 1: // Creativity - Human advantage
+            case 3: // Emotion - Human advantage
+            case 4: // Learning - Human advantage (for few examples)
+                correctAnswer = 1;
+                break;
+            case 2: // Logic/Processing - AI advantage
+                correctAnswer = 2;
+                break;
+            default:
+                correctAnswer = 1;
+        }
+        
+        if(answer == correctAnswer) {
+            printf("Correct! %s\n", questions[i].humanAdvantage);
+            score++;
+        } else {
+            printf("Actually, %s\n", questions[i].aiAdvantage);
+        }
+        printf("\n");
+    }
+    
+    printf("Quiz Complete! You scored %d out of %d\n", score, MAX_QUESTIONS);
+    printf("This demonstrates that both human and AI intelligence\n");
+    printf("have unique strengths and weaknesses.\n");
+}
+
+void displayIntelligenceComparison(void) {
+    printf("\n--- Human vs AI Intelligence Comparison ---\n\n");
+    
+    printf("%-25s | %-30s | %-30s\n", "Aspect", "Human Intelligence", "AI Intelligence");
+    printf("-------------------------|------------------------------|------------------------------\n");
+    
+    printf("%-25s | %-30s | %-30s\n", "Processing Speed", "Slower but contextual", "Extremely fast");
+    printf("%-25s | %-30s | %-30s\n", "Creativity", "Highly creative", "Limited to patterns");
+    printf("%-25s | %-30s | %-30s\n", "Emotional Intelligence", "Natural empathy", "Simulated responses");
+    printf("%-25s | %-30s | %-30s\n", "Learning Efficiency", "Learns from few examples", "Needs large datasets");
+    printf("%-25s | %-30s | %-30s\n", "Common Sense", "Innate understanding", "Requires explicit training");
+    printf("%-25s | %-30s | %-30s\n", "Energy Consumption", "~20 watts", "Hundreds of watts+");
+    printf("%-25s | %-30s | %-30s\n", "Consciousness", "Self-aware", "No consciousness");
+    printf("%-25s | %-30s | %-30s\n", "Adaptability", "Highly adaptable", "Task-specific");
+    printf("%-25s | %-30s | %-30s\n", "Error Patterns", "Intuitive errors", "Systematic errors");
+    printf("%-25s | %-30s | %-30s\n", "Moral Reasoning", "Values-based", "Rule-based");
+    
+    printf("\nKey Insight: Human and AI intelligence are complementary.\n");
+    printf("The future lies in combining the strengths of both.\n");
+}
+
+void demonstrateAILearning(void) {
+    printf("\n--- AI Learning Demonstration ---\n");
+    printf("This simulates how AI learns from data patterns.\n\n");
+    
+    // Simulate a simple learning pattern
+    int trainingData[] = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
+    int dataSize = 10;
+    
+    printf("Training Data (Even numbers): ");
+    for(int i = 0; i < dataSize; i++) {
+        printf("%d ", trainingData[i]);
+    }
+    printf("\n\n");
+    
+    // AI "learns" the pattern
+    printf("AI is learning the pattern...\n");
+    for(int i = 0; i < 3; i++) {
+        printf("Epoch %d: Adjusting weights...\n", i+1);
+    }
+    
+    // Test the learned pattern
+    int testNumber;
+    printf("\nAI has learned that the pattern is: next = previous + 2\n");
+    printf("Enter a number to test AI prediction: ");
+    scanf("%d", &testNumber);
+    clearInputBuffer();
+    
+    int predictedNext = testNumber + 2;
+    printf("AI predicts the next number after %d is: %d\n", testNumber, predictedNext);
+    
+    printf("\nNote: This is a simple demonstration. Real AI learning\n");
+    printf("involves complex neural networks and millions of parameters.\n");
+    printf("However, AI lacks true understanding - it only recognizes patterns.\n");
+}
+
+void demonstrateHumanCreativity(void) {
+    printf("\n--- Human Creativity Demonstration ---\n");
+    printf("This highlights aspects of human creativity that AI cannot replicate.\n\n");
+    
+    printf("Human Creativity Traits:\n");
+    printf("1. Original thought generation\n");
+    printf("2. Emotional expression through art\n");
+    printf("3. Intuitive problem solving\n");
+    printf("4. Cross-domain innovation\n");
+    printf("5. Subjective experience integration\n\n");
+    
+    printf("Example: A human poet writes from personal experience,\n");
+    printf("emotions, and unique perspective. AI can mimic poetic\n");
+    printf("forms but cannot truly feel or experience the emotions\n");
+    printf("that inspire genuine poetry.\n\n");
+    
+    printf("Try this creative exercise:\n");
+    printf("Think of a personal memory that makes you happy.\n");
+    printf("Now imagine trying to program that feeling into a machine.\n");
+    printf("This illustrates the gap between human and AI intelligence.\n");
+}
